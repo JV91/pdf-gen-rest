@@ -1,14 +1,23 @@
-use actix_web::{web, App, HttpResponse, HttpServer};
+use actix_web::{web, App, HttpResponse, HttpServer, HttpRequest};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 
-async fn generate_pdf(body: String) -> HttpResponse {
+async fn generate_pdf(req: HttpRequest, body: String) -> HttpResponse {
     // Log received request from client
     println!("Received request with body: {}", body);
 
     // TODO: Extract the API key from the headers
+    let api_key = req.headers().get("X-PDFGEN-API-KEY").and_then(|header| header.to_str().ok());
 
+    // Define the expected API key
+    let expected_api_key = "aRpq5HDQxyUjsZ3Kejm7";
+
+    // Validate API key
+    if api_key != Some(expected_api_key) {
+        eprintln!("Invalid API key");
+        return HttpResponse::Unauthorized().body("Invalid API key");
+    }
 
     // Output PDF file path
     let pdf_file_path = "output.pdf";
@@ -53,3 +62,5 @@ async fn main() -> std::io::Result<()> {
         .run()
         .await
 }
+
+
